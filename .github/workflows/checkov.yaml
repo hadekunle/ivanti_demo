@@ -1,0 +1,61 @@
+name: Checkov Terraform Scan
+on:
+  push:
+    branches:
+      - !develop
+
+permissions:
+  actions: write          # Required for uploading artifacts
+  contents: read          # This is required for actions/checkout
+  id-token: write         # This is required for aws oidc connection
+  pull-requests: write    # This is required for gh bot to comment PR
+  security-events: write  # If you plan to upload results to GitHub Security tab
+
+
+jobs:
+  checkov-scan:
+    name: Run Checkov Security Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 1.5 
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        # uses: actions/checkout@v4
+
+      - name: Configure AWS credentials from AWS account
+        uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722
+        # uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ secrets.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          role-session-name: GitHub-OIDC-CHECKOV
+
+      - name: Install Checkov #TODO: Change to checkov-action
+        run: |
+          pip install checkov > /dev/null 2>&1
+
+      - name: Generate JSON report
+        continue-on-error: true
+        run: |
+            checkov --directory . \
+                --check LOW \
+                --skip-check CKV_* \
+                --soft-fail --quiet --compact \
+                --output-file-path reports \
+                --output json
+
+      - name: Upload Checkov report as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: checkov-report
+          path: reports
+
+      - name: Upload report to S3
+        run: |
+          year=$(date +%Y)
+          month=$(date +%m)
+          day=$(date +%d)
+          timestamp=$(date +%H%M%S)
+
+          aws s3 cp reports/results_json.json s3://${{ env.AWS_SCAN_BUCKET }}/checkov-reports/${year}/${month}/${day}/${timestamp}-scan.json
