@@ -1,15 +1,6 @@
-name: GitHub Actions Demo
-run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
-on: 
-  push:
-    branches:
-      - main
-      - develop
-  pull_request:
-    branches:
-      - main
-      - develop
-  workflow_dispatch: # Allows manual triggering of the workflow
+name: manual_deploy
+on:
+  workflow_dispatch:
     inputs:
       terraform_action:
         description: "Terraform Command"
@@ -19,19 +10,98 @@ on:
         options:
           - plan
           - apply
-          - destroy      
+          - destroy
+      lock_ID:
+        description: "LockID of terraform state"
+        required: false
+        type: string
+        default: ""
+      unlock_state:
+        description: "Unlock the Terraform state"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  id-token: write       # This is required for aws oidc connection
+  contents: read        # This is required for actions/checkout
+  pull-requests: write  # This is required for gh bot to comment PR
+
+env:
+  TF_LOG: INFO
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+
 jobs:
-  Explore-GitHub-Actions:
-    runs-on: ubuntu-latest
+  deploy:
+    runs-on: ubuntu-22.04
     steps:
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
-      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
-      - name: Check out repository code
-        uses: actions/checkout@v4
-      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
-      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
-      - name: List files in the repository
+      - name: Print All Inputs
         run: |
-          ls ${{ github.workspace }}
-      - run: echo "🍏 This job's status is ${{ job.status }}."
+          echo "Terraform Action: ${{ inputs.terraform_action }}"
+          echo "Unlock State:     ${{ inputs.unlock_state }}"
+
+      - name: Git checkout
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials from AWS account
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ secrets.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          role-session-name: GitHub-OIDC-TERRAFORM
+          output-credentials: false
+
+      - name: Verify AWS Credentials
+        run: aws sts get-caller-identity
+        continue-on-error: true
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.7
+
+      - name: Determine Environment
+        run: |
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+            echo "git_env=prod" >> $GITHUB_ENV
+          elif [[ "${{ github.ref_name }}" == "test" ]]; then
+            echo "git_env=test" >> $GITHUB_ENV
+          else
+            echo "git_env=dev" >> $GITHUB_ENV
+          fi
+        
+
+      - name: Terraform Init
+        # run: terraform init
+        env:
+          AWS_BUCKET_NAME: ${{ vars.AWS_BUCKET_NAME }}
+          git_env: ${{ env.git_env }}
+        run: terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_NAME}" -backend-config="region=${AWS_REGION}"
+
+      - name: Terraform select workspace
+        run: terraform workspace select ${{ env.git_env }} || terraform workspace new  ${{ env.git_env }}
+
+      - name: Unlock Terraform State
+        if: ${{ inputs.unlock_state }}
+        run: |
+          # LOCK_ID=$(aws dynamodb scan --table-name github-action-lock-table --query "Items[].Info.S" --output text | grep -o '"ID":"[^"]*"' | cut -d':' -f2 | tr -d '"')
+
+          # if [ -z "$LOCK_ID" ]; then
+          #   echo "::error title=No Lock Found::No lock ID retrieved from the table."
+          #   exit 1
+          # else
+          #   echo "Retrieved Lock ID: $LOCK_ID"
+          #   terraform force-unlock -force $LOCK_ID
+          # fi
+        
+          terraform force-unlock -force ${{ inputs.lock_ID }}
+
+      - name: Terraform Plan
+        if: ${{ inputs.terraform_action == 'plan' || inputs.terraform_action == 'apply' }}
+        run: terraform plan
+        # run: terraform plan -var-file="modules/common.tfvars" -var-file="modules/${{ env.git_env }}.tfvars"
+
+      - name: Terraform ${{ inputs.terraform_action }}
+        if: ${{ inputs.terraform_action == 'apply' || inputs.terraform_action == 'destroy' }}
+        run: terraform ${{ inputs.terraform_action }} --auto-approve -input=false
+        # run: terraform ${{ inputs.terraform_action }} -var-file="modules/common.tfvars" -var-file="modules/${{ env.git_env }}.tfvars" --auto-approve -input=false
