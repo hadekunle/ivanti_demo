@@ -69,14 +69,14 @@ jobs:
           else
             echo "git_env=dev" >> $GITHUB_ENV
           fi
-        env:
-          git_env: ${{ env.git_env }}
+        
 
       - name: Terraform Init
         # run: terraform init
         env:
           AWS_BUCKET_NAME: ${{ vars.AWS_BUCKET_NAME }}
-        run: terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
+          git_env: ${{ env.git_env }}
+        run: terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_NAME}" -backend-config="region=${AWS_REGION}"
 
       - name: Terraform select workspace
         run: terraform workspace select ${{ env.git_env }} || terraform workspace new  ${{ env.git_env }}
