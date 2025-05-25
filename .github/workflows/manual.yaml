@@ -2,7 +2,24 @@ name: GitHub Actions Demo
 run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
 on: 
   push:
-  workflow_dispatch: 
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+  workflow_dispatch: # Allows manual triggering of the workflow
+    inputs:
+      terraform_action:
+        description: "Terraform Command"
+        required: true
+        type: choice
+        default: apply
+        options:
+          - plan
+          - apply
+          - destroy      
 jobs:
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
