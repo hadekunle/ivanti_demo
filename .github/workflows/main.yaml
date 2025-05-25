@@ -5,7 +5,7 @@ on:
       terraform_action:
         description: "Terraform Command"
         required: true
-        type: choice
+        type: string
         default: apply
         options:
           - plan
