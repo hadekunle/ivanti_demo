@@ -1,6 +1,8 @@
 name: Checkov Terraform Scan
 on:
   push:
+    branches:
+      - !develop
 
 permissions:
   actions: write          # Required for uploading artifacts

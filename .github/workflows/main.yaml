@@ -22,14 +22,14 @@ on:
         type: boolean
         default: false
 
-permissions:
-  id-token: write       # This is required for aws oidc connection
-  contents: read        # This is required for actions/checkout
-  pull-requests: write  # This is required for gh bot to comment PR
+# permissions:
+#   id-token: write       # This is required for aws oidc connection
+#   contents: read        # This is required for actions/checkout
+#   pull-requests: write  # This is required for gh bot to comment PR
 
-env:
-  TF_LOG: INFO
-  AWS_REGION: ${{ secrets.AWS_REGION }}
+# env:
+#   TF_LOG: INFO
+#   AWS_REGION: ${{ secrets.AWS_REGION }}
 
 jobs:
   deploy:
@@ -40,35 +40,35 @@ jobs:
           echo "Terraform Action: ${{ inputs.terraform_action }}"
           echo "Unlock State:     ${{ inputs.unlock_state }}"
 
-      - name: Git checkout
-        uses: actions/checkout@v3
+#       - name: Git checkout
+#         uses: actions/checkout@v3
 
-      - name: Configure AWS credentials from AWS account
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-region: ${{ secrets.AWS_REGION }}
-          role-to-assume: ${{ secrets.AWS_ROLE }}
-          role-session-name: GitHub-OIDC-TERRAFORM
-          output-credentials: false
+#       - name: Configure AWS credentials from AWS account
+#         uses: aws-actions/configure-aws-credentials@v4
+#         with:
+#           aws-region: ${{ secrets.AWS_REGION }}
+#           role-to-assume: ${{ secrets.AWS_ROLE }}
+#           role-session-name: GitHub-OIDC-TERRAFORM
+#           output-credentials: false
 
-      - name: Verify AWS Credentials
-        run: aws sts get-caller-identity
-        continue-on-error: true
+#       - name: Verify AWS Credentials
+#         run: aws sts get-caller-identity
+#         continue-on-error: true
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.5.7
+#       - name: Setup Terraform
+#         uses: hashicorp/setup-terraform@v2
+#         with:
+#           terraform_version: 1.5.7
 
-      - name: Determine Environment
-        run: |
-          if [[ "${{ github.ref_name }}" == "main" ]]; then
-            echo "git_env=prod" >> $GITHUB_ENV
-          elif [[ "${{ github.ref_name }}" == "test" ]]; then
-            echo "git_env=test" >> $GITHUB_ENV
-          else
-            echo "git_env=dev" >> $GITHUB_ENV
-          fi
+#       - name: Determine Environment
+#         run: |
+#           if [[ "${{ github.ref_name }}" == "main" ]]; then
+#             echo "git_env=prod" >> $GITHUB_ENV
+#           elif [[ "${{ github.ref_name }}" == "test" ]]; then
+#             echo "git_env=test" >> $GITHUB_ENV
+#           else
+#             echo "git_env=dev" >> $GITHUB_ENV
+#           fi
         # env:
         #   git_env: ${{ env.git_env }}
 
