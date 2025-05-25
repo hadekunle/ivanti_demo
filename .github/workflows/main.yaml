@@ -5,7 +5,7 @@ on:
       terraform_action:
         description: "Terraform Command"
         required: true
-        type: string
+        type: choice
         default: apply
         options:
           - plan
@@ -69,8 +69,8 @@ jobs:
           else
             echo "git_env=dev" >> $GITHUB_ENV
           fi
-        env:
-          git_env: ${{ env.git_env }}
+        # env:
+        #   git_env: ${{ env.git_env }}
 
       - name: Terraform Init
         run: terraform init
