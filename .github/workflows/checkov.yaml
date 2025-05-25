@@ -41,7 +41,6 @@ jobs:
         continue-on-error: true
         run: |
             checkov --directory . \
-                --check LOW \
                 --soft-fail --quiet --compact \
                 --output-file-path reports \
                 --output json
