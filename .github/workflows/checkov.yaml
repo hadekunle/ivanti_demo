@@ -59,4 +59,4 @@ jobs:
           day=$(date +%d)
           timestamp=$(date +%H%M%S)
 
-          aws s3 cp reports/results_json.json s3://${{ vars.AWS_BUCKET_NAME }}/checkov-reports/${year}/${month}/${day}/${timestamp}-scan.json
+          aws s3 cp reports/results_json.json s3://${{ vars.AWS_SCAN_BUCKET }}/checkov-reports/${year}/${month}/${day}/${timestamp}-scan.json
