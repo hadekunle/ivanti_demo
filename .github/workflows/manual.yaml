@@ -75,15 +75,15 @@ jobs:
         env:
           AWS_BUCKET_NAME: ${{ vars.AWS_BUCKET_NAME }}
           git_env: ${{ env.git_env }}
-        run: terraform init
+        run: terraform  -chdir="./iac" init
 
       - name: Terraform select workspace
-        run: terraform workspace select ${{ env.git_env }} || terraform workspace new  ${{ env.git_env }}
+        run: terraform  -chdir="./iac"  workspace select ${{ env.git_env }} || terraform workspace new  ${{ env.git_env }}
 
       - name: Unlock Terraform State
         if: ${{ inputs.unlock_state }}
         run: |
-          terraform force-unlock -force ${{ inputs.lock_ID }}
+          terraform  -chdir="./iac" force-unlock -force ${{ inputs.lock_ID }}
 
       - name: Terraform Plan
         if: ${{ inputs.terraform_action == 'plan' || inputs.terraform_action == 'apply' }}
