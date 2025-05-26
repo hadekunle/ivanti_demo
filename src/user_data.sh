@@ -1,6 +1,6 @@
 #!/bin/bash
 cd ~
-echo "Setting up the environment...${environment}" > test.log
+echo "Setting up the environment..." > test.log
 apt-get update
 apt-get install -y python3-full python3-venv
 
@@ -20,4 +20,3 @@ echo "    return 'Hello World from Ade!'" >> app.py
 echo "if __name__ == '__main__':" >> app.py
 echo "    app.run(host='0.0.0.0', debug=True)" >> app.py
 python3 app.py
-
