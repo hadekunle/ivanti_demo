@@ -7,4 +7,4 @@ def hello_world():
     return "Hello World from Ade!"  
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000)  # Run the app on all interfaces at port 5000
+    app.run(host='0.0.0.0', port=5000)

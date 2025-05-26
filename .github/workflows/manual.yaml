@@ -72,37 +72,27 @@ jobs:
         
 
       - name: Terraform Init
-        # run: terraform init
         env:
           AWS_BUCKET_NAME: ${{ vars.AWS_BUCKET_NAME }}
           git_env: ${{ env.git_env }}
-        run: terraform init 
-        # -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=terraform.tfstate" -backend-config="region=${AWS_REGION}"
+        run: terraform  -chdir="./iac" init
 
       - name: Terraform select workspace
-        run: terraform workspace select ${{ env.git_env }} || terraform workspace new  ${{ env.git_env }}
+        run: terraform  -chdir="./iac"  workspace select ${{ env.git_env }} || terraform workspace new  ${{ env.git_env }}
 
       - name: Unlock Terraform State
         if: ${{ inputs.unlock_state }}
         run: |
-          # LOCK_ID=$(aws dynamodb scan --table-name github-action-lock-table --query "Items[].Info.S" --output text | grep -o '"ID":"[^"]*"' | cut -d':' -f2 | tr -d '"')
-
-          # if [ -z "$LOCK_ID" ]; then
-          #   echo "::error title=No Lock Found::No lock ID retrieved from the table."
-          #   exit 1
-          # else
-          #   echo "Retrieved Lock ID: $LOCK_ID"
-          #   terraform force-unlock -force $LOCK_ID
-          # fi
-        
-          terraform force-unlock -force ${{ inputs.lock_ID }}
+          terraform  -chdir="./iac" force-unlock -force ${{ inputs.lock_ID }}
 
       - name: Terraform Plan
         if: ${{ inputs.terraform_action == 'plan' || inputs.terraform_action == 'apply' }}
-        run: terraform plan
-        # run: terraform plan -var-file="modules/common.tfvars" -var-file="modules/${{ env.git_env }}.tfvars"
+        run: terraform -chdir="iac/" plan -var-file="../tfvars/${{ env.git_env }}.tfvars"
 
       - name: Terraform ${{ inputs.terraform_action }}
         if: ${{ inputs.terraform_action == 'apply' || inputs.terraform_action == 'destroy' }}
-        run: terraform ${{ inputs.terraform_action }} --auto-approve -input=false
-        # run: terraform ${{ inputs.terraform_action }} -var-file="modules/common.tfvars" -var-file="modules/${{ env.git_env }}.tfvars" --auto-approve -input=false
+        run: terraform -chdir="./iac" ${{ inputs.terraform_action }} -var-file="../tfvars/${{ env.git_env }}.tfvars" --auto-approve -input=false
+
+      - name: Terraform Output
+        if: ${{ inputs.terraform_action == 'apply' || inputs.terraform_action == 'plan' }}
+        run: terraform -chdir="./iac" output
