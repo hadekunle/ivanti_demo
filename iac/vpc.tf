@@ -1,6 +1,6 @@
 resource "random_pet" "example" {
-  length    = 1    # Number of words in the name
-  separator = "-"  # Separator between words
+  length    = 1   # Number of words in the name
+  separator = "-" # Separator between words
 }
 
 resource "aws_security_group" "flask_sg" {
@@ -28,7 +28,7 @@ resource "aws_security_group" "flask_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  depends_on = [ random_pet.example ]
+  depends_on = [random_pet.example]
 
   tags = {
     Name        = "flask_app_sg-${random_pet.example.id}"

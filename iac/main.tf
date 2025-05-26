@@ -7,13 +7,18 @@ resource "aws_instance" "flask_app" {
 
   # user_data = file("${path.module}/../src/user_data.sh")
   user_data = templatefile("${path.module}/../src/user_data.sh.tpl", {
-    environment  = var.environment
-    project_name = var.project_name
+    environment    = var.environment
+    project_name   = var.project_name
+    force_recreate = timestamp()
   })
   tags = {
     Name        = var.project_name
     Environment = var.environment
 
+  }
+
+  lifecycle {
+    replace_triggered_by = [user_data]
   }
 }
 
