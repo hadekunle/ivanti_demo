@@ -63,3 +63,6 @@ jobs:
 
       - name: Terraform Apply
         run: terraform -chdir="./iac" apply -var-file="../tfvars/${{ env.git_env }}.tfvars" --auto-approve -input=false
+
+      - name: Terraform Output
+        run: terraform -chdir="./iac" output
