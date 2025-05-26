@@ -1,0 +1,52 @@
+name: Auto Deploy on Push
+on:
+  push:
+    branches: ["main", "test", "dev"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ secrets.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          role-session-name: GitHub-OIDC-TERRAFORM
+          output-credentials: false
+
+      - name: Verify AWS Credentials
+        run: aws sts get-caller-identity
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.7
+
+      - name: Determine Environment
+        run: |
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+            echo "git_env=prod" >> $GITHUB_ENV
+          elif [[ "${{ github.ref_name }}" == "test" ]]; then
+            echo "git_env=test" >> $GITHUB_ENV
+          else
+            echo "git_env=dev" >> $GITHUB_ENV
+          fi
+
+      - name: Terraform Init
+        env:
+          AWS_BUCKET_NAME: ${{ vars.AWS_BUCKET_NAME }}
+          git_env: ${{ env.git_env }}
+        run: terraform init
+
+      - name: Terraform Select Workspace
+        run: terraform workspace select ${{ env.git_env }} || terraform workspace new ${{ env.git_env }}
+
+      - name: Terraform Plan
+        run: terraform plan
+
+      - name: Terraform Apply
+        run: terraform apply --auto-approve -input=false
