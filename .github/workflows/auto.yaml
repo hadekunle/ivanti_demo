@@ -1,7 +1,10 @@
 name: Auto Deploy on Push
 on:
   push:
-    branches: ["main", "test", "dev"]
+    branches:
+      - develop
+      - test
+      - main
 
 jobs:
   deploy:
