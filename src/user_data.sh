@@ -12,15 +12,12 @@ source venv/bin/activate
 venv/bin/pip3 install flask
 
 # Create and Start the Flask application
-cd ~
-echo "from flask import Flask" > app.py
-echo "" >> app.py
+echo "from flask import Flask" >> app.py
 echo "app = Flask(__name__)" >> app.py
-echo "" >> app.py
 echo "@app.route('/')" >> app.py
 echo "def hello_world():" >> app.py
-echo "    return 'Hello World from Ade! \n Environment: ${environment}'" >> app.py
+echo "    return 'Hello World from Ade!'" >> app.py
 echo "if __name__ == '__main__':" >> app.py
 echo "    app.run(host='0.0.0.0', debug=True)" >> app.py
-
 python3 app.py
+

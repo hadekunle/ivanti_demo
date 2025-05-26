@@ -5,13 +5,16 @@ resource "aws_instance" "flask_app" {
   vpc_security_group_ids = [aws_security_group.flask_sg.id]
   depends_on             = [aws_security_group.flask_sg]
 
-  user_data = templatefile("../src/user_data.sh", {
-    environment  = var.environment
+  user_data = file("${path.module}/../src/user_data.sh", {
   })
-
   tags = {
     Name        = var.project_name
     Environment = var.environment
+    
   }
 }
 
+resource "aws_ec2_instance_metadata_defaults" "enforce-imdsv2" {
+  instance_metadata_tags = "enabled"
+  http_endpoint          = "enabled"
+}
