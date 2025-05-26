@@ -97,10 +97,8 @@ jobs:
 
       - name: Terraform Plan
         if: ${{ inputs.terraform_action == 'plan' || inputs.terraform_action == 'apply' }}
-        run: terraform plan
-        # run: terraform plan -var-file="modules/common.tfvars" -var-file="modules/${{ env.git_env }}.tfvars"
+        run: terraform plan -var-file="modules/${{ env.git_env }}.tfvars"
 
       - name: Terraform ${{ inputs.terraform_action }}
         if: ${{ inputs.terraform_action == 'apply' || inputs.terraform_action == 'destroy' }}
-        run: terraform ${{ inputs.terraform_action }} --auto-approve -input=false
-        # run: terraform ${{ inputs.terraform_action }} -var-file="modules/common.tfvars" -var-file="modules/${{ env.git_env }}.tfvars" --auto-approve -input=false
+        run: terraform ${{ inputs.terraform_action }} -var-file="modules/${{ env.git_env }}.tfvars" --auto-approve -input=false
