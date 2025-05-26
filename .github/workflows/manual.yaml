@@ -76,7 +76,8 @@ jobs:
         env:
           AWS_BUCKET_NAME: ${{ vars.AWS_BUCKET_NAME }}
           git_env: ${{ env.git_env }}
-        run: terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_NAME}" -backend-config="region=${AWS_REGION}"
+        run: terraform init 
+        # -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=terraform.tfstate" -backend-config="region=${AWS_REGION}"
 
       - name: Terraform select workspace
         run: terraform workspace select ${{ env.git_env }} || terraform workspace new  ${{ env.git_env }}
