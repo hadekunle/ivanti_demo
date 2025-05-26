@@ -18,7 +18,7 @@ resource "aws_instance" "flask_app" {
   }
 
   lifecycle {
-    replace_triggered_by = [user_data]
+    replace_triggered_by = [aws_instance.flask_app.user_data]
   }
 }
 
