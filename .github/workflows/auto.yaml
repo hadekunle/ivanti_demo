@@ -1,0 +1,71 @@
+name: Auto Deploy on Push
+on:
+  push:
+    branches:
+      - develop
+      - test
+      - main
+
+permissions:
+  id-token: write       # This is required for aws oidc connection
+  contents: read        # This is required for actions/checkout
+  pull-requests: write  # This is required for gh bot to comment PR
+
+env:
+  TF_LOG: INFO
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials from AWS account
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ secrets.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          role-session-name: GitHub-OIDC-TERRAFORM
+          output-credentials: false
+
+      - name: Verify AWS Credentials
+        run: aws sts get-caller-identity
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.7
+
+      - name: Determine Environment
+        run: |
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+            echo "git_env=prod" >> $GITHUB_ENV
+          elif [[ "${{ github.ref_name }}" == "test" ]]; then
+            echo "git_env=test" >> $GITHUB_ENV
+          else
+            echo "git_env=dev" >> $GITHUB_ENV
+          fi
+        
+
+      - name: Terraform Init
+        env:
+          AWS_BUCKET_NAME: ${{ vars.AWS_BUCKET_NAME }}
+          git_env: ${{ env.git_env }}
+        run: terraform -chdir="./iac" init
+
+      - name: Terraform Select Workspace
+        run: terraform -chdir="./iac" workspace select ${{ env.git_env }} || terraform workspace new ${{ env.git_env }}
+
+      - name: Terraform Plan
+        run: terraform -chdir="iac/" plan -var-file="../tfvars/${{ env.git_env }}.tfvars"
+
+      - name: Terraform Apply
+        run: terraform -chdir="./iac" apply -var-file="../tfvars/${{ env.git_env }}.tfvars" --auto-approve -input=false
+
+      # - name: Terraform destroy
+      #   run: terraform -chdir="./iac" destroy -var-file="../tfvars/${{ env.git_env }}.tfvars" --auto-approve -input=false
+
+      - name: Terraform Output
+        run: terraform -chdir="./iac" output
