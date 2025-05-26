@@ -53,14 +53,13 @@ jobs:
         env:
           AWS_BUCKET_NAME: ${{ vars.AWS_BUCKET_NAME }}
           git_env: ${{ env.git_env }}
-        run: terraform init
+        run: terraform -chdir="./iac" init
 
       - name: Terraform Select Workspace
-        run: terraform workspace select ${{ env.git_env }} || terraform workspace new ${{ env.git_env }}
+        run: terraform -chdir="./iac" workspace select ${{ env.git_env }} || terraform workspace new ${{ env.git_env }}
 
       - name: Terraform Plan
-        run: terraform plan -var-file="tfvars/${{ env.git_env }}.tfvars"
-
+        run: terraform -chdir="iac/" plan -var-file="tfvars/${{ env.git_env }}.tfvars"
 
       - name: Terraform Apply
-        run: terraform apply -var-file="tfvars/${{ env.git_env }}.tfvars" --auto-approve -input=false
+        run: terraform -chdir="./iac" apply -var-file="tfvars/${{ env.git_env }}.tfvars" --auto-approve -input=false
