@@ -5,20 +5,11 @@ resource "aws_instance" "flask_app" {
   vpc_security_group_ids = [aws_security_group.flask_sg.id]
   depends_on             = [aws_security_group.flask_sg]
 
-  # user_data = file("${path.module}/../src/user_data.sh")
-  user_data = templatefile("${path.module}/../src/user_data.sh.tpl", {
-    environment    = var.environment
-    project_name   = var.project_name
-    force_recreate = timestamp()
-  })
+  user_data = file("${path.module}/../src/user_data.sh")
   tags = {
     Name        = var.project_name
     Environment = var.environment
 
-  }
-
-  lifecycle {
-    replace_triggered_by = [aws_instance.flask_app.user_data]
   }
 }
 
