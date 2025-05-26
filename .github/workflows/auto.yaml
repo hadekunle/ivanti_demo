@@ -59,8 +59,8 @@ jobs:
         run: terraform workspace select ${{ env.git_env }} || terraform workspace new ${{ env.git_env }}
 
       - name: Terraform Plan
-        run: terraform plan -var-file="modules/${{ env.git_env }}.tfvars"
+        run: terraform plan -var-file="tfvars/${{ env.git_env }}.tfvars"
 
 
       - name: Terraform Apply
-        run: terraform ${{ inputs.terraform_action }} -var-file="modules/${{ env.git_env }}.tfvars" --auto-approve -input=false
+        run: terraform ${{ inputs.terraform_action }} -var-file="tfvars/${{ env.git_env }}.tfvars" --auto-approve -input=false
