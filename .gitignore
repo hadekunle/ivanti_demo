@@ -1,9 +1,10 @@
 # Local .terraform directories
 .terraform/
-
 # Scan report files
 checkov-report/
 .DS_Store
+*.pem
+venv
 # .tfstate files
 *.tfstate
 *.tfstate.*
