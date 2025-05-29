@@ -16,7 +16,7 @@ echo "from flask import Flask" >> app.py
 echo "app = Flask(__name__)" >> app.py
 echo "@app.route('/')" >> app.py
 echo "def hello_world():" >> app.py
-echo "    return 'Hello World from Ade!'" >> app.py
+echo "    return 'Hello World from Ade! to Ivanti'" >> app.py
 echo "if __name__ == '__main__':" >> app.py
 echo "    app.run(host='0.0.0.0', debug=True)" >> app.py
 python3 app.py
