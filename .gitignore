@@ -227,5 +227,5 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
-#Ke for ssh 
+#Key pair for ssh 
 *.pem
